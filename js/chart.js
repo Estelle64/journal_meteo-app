@@ -1,5 +1,5 @@
 /**
- * charts.js
+ * chart.js
  * Gestion des graphiques avec Chart.js
  */
 
@@ -10,8 +10,13 @@ let currentChartPeriod = 'month';
  * Initialiser le graphique
  */
 function initChart() {
+    console.log('initChart() called.');
     const ctx = document.getElementById('rainfallChart');
-    if (!ctx) return;
+    if (!ctx) {
+        console.warn('Canvas element with ID "rainfallChart" not found.');
+        return;
+    }
+    console.log('Canvas context found.');
     
     chart = new Chart(ctx.getContext('2d'), {
         type: 'bar',
@@ -64,7 +69,13 @@ function switchChart(period) {
     document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
     });
-    event.target.classList.add('active');
+    // The 'event' object might not be directly available if called without a direct event.
+    // Assuming 'this' refers to the clicked tab in an actual event handler.
+    // If this is called programmatically, you might need to pass the target element.
+    const targetTab = event ? event.target : null;
+    if (targetTab) {
+        targetTab.classList.add('active');
+    }
     
     updateChart(period);
 }
@@ -74,7 +85,11 @@ function switchChart(period) {
  * @param {string} period - 'month' ou 'year'
  */
 function updateChart(period = 'month') {
-    if (!chart) return;
+    console.log('updateChart() called with period:', period);
+    if (!chart) {
+        console.warn('Chart instance not found when trying to update.');
+        return;
+    }
     
     const now = new Date();
     let labels = [];
@@ -104,6 +119,8 @@ function updateChart(period = 'month') {
             data.push(monthTotal);
         }
     }
+
+    console.log('Chart data for period', period, ': Labels:', labels, 'Data:', data);
 
     // Mettre à jour les données du graphique
     chart.data.labels = labels;

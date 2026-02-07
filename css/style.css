@@ -54,6 +54,21 @@ body::before {
     z-index: 1;
 }
 
+/* Main Content Layout for horizontal arrangement */
+.main-content-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px; /* Space between cards */
+    margin-bottom: 30px; /* Space before next card */
+    justify-content: center;
+    align-items: flex-start; /* Align items to the top */
+}
+
+.main-content-layout > .card {
+    flex: 1; /* Allow cards to grow and shrink */
+    min-width: 300px; /* Minimum width before wrapping */
+}
+
 /* Header */
 header {
     text-align: center;

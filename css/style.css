@@ -416,6 +416,9 @@ input[type="file"] {
 
 /* Responsive */
 @media (max-width: 600px) {
+  .main-tabs::-webkit-scrollbar {
+    display: none;
+  }
   body {
     padding: 10px; /* Moins de padding sur les petits écrans */
   }
@@ -449,13 +452,18 @@ input[type="file"] {
 
   /* Onglets principaux plus compacts */
   .main-tabs {
+    justify-content: flex-start;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 0 10px 10px;
     gap: 10px;
-    margin-bottom: 20px;
+    -webkit-overflow-scrolling: touch;
   }
-
   .main-tab {
-    font-size: 1rem;
-    padding: 10px 20px;
+    flex: 0 0 auto;
+    font-size: 0.95rem;
+    padding: 10px 16px;
+    border-radius: 999px;
   }
 
   /* Style pour l'input de date sur mobile */

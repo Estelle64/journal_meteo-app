@@ -7,17 +7,10 @@
  * Afficher la date actuelle sur l'onglet température
  */
 function updateCurrentDate() {
-  const today = new Date();
-  const options = {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  };
-  const formattedDate = today.toLocaleDateString("fr-FR", options);
-
-  const dateElementTemp = document.getElementById("currentDateTemp");
-  if (dateElementTemp) dateElementTemp.textContent = formattedDate;
+  // This function is no longer needed to update currentDateTemp as it's now an input.
+  // The input value is set in fillTodaysInputs().
+  // Keeping it empty or removing it depends on other uses.
+  // For now, let's keep it empty.
 }
 
 /**
@@ -196,6 +189,31 @@ function saveRainfall() {
 }
 
 /**
+ * Enregistrer les données de température pour une date
+ */
+function saveTemperature() {
+    const morningInput = document.getElementById('tempMorningInput');
+    const afternoonInput = document.getElementById('tempAfternoonInput');
+    const tempDateInput = document.getElementById('tempDateInput'); // Get date input
+    if (!morningInput || !afternoonInput || !tempDateInput) return;
+
+    const morningTemp = morningInput.value !== '' ? parseFloat(morningInput.value) : null;
+    const afternoonTemp = afternoonInput.value !== '' ? parseFloat(afternoonInput.value) : null;
+    const date = tempDateInput.value; // Get date from input
+
+    if (!date) {
+        showNotification('Veuillez sélectionner une date', 'warning');
+        return;
+    }
+
+    setTemperatureForDate(date, morningTemp, afternoonTemp); // Use selected date
+    
+    updateTemperatureCharts();
+    
+    showNotification(`🌡️ Températures (${date}) enregistrées !`, 'success');
+}
+
+/**
  * Enregistrer un commentaire pour une date
  */
 function saveNewComment() {
@@ -256,8 +274,13 @@ function fillTodaysInputs() {
   // Température
   const tempMorningInput = document.getElementById("tempMorningInput");
   const tempAfternoonInput = document.getElementById("tempAfternoonInput");
-  if (tempMorningInput && tempAfternoonInput) {
-    const todayTemp = getTemperatureForDate(todayISO);
+  const tempDateInput = document.getElementById("tempDateInput"); 
+  if (tempMorningInput && tempAfternoonInput && tempDateInput) {
+    if (!tempDateInput.value) {
+        tempDateInput.value = todayISO;
+    }
+    const selectedDate = tempDateInput.value; // Get selected date for temperature
+    const todayTemp = getTemperatureForDate(selectedDate); // Use selectedDate
     tempMorningInput.value =
       todayTemp.morning !== null ? todayTemp.morning : "";
     tempAfternoonInput.value =
@@ -334,4 +357,14 @@ function initUIEvents() {
           saveNewComment();
       }
   });
+
+  // Event listener pour la touche "Entrée" dans l'input watts
+  document.getElementById("wattInput")?.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") saveWatt();
+  });
+
+  // Event listener pour le changement de date de watts
+  document
+    .getElementById("wattDateInput")
+    ?.addEventListener("change", fillTodaysInputs);
 }

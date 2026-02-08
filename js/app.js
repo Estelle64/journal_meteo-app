@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadData();
     
     // 2. Initialiser l'interface
-    updateCurrentDate();
+    // updateCurrentDate(); // No longer needed, as date inputs are handled by fillTodaysInputs()
     updateStats();
     
     // 3. Initialiser les graphiques
@@ -45,14 +45,18 @@ function switchMainTab(tabName) {
 
     // Mettre à jour les graphiques ou l'historique spécifiques à l'onglet actif
     if (tabName === 'rain') {
+        fillTodaysInputs(); // Ensure inputs for rain tab are up-to-date
         updateChart();
         updateHistory();
     } else if (tabName === 'temp') {
+        fillTodaysInputs(); // Ensure inputs for temp tab are up-to-date
         updateTemperatureCharts();
     } else if (tabName === 'watt') {
+        fillTodaysInputs(); // Ensure inputs for watt tab are up-to-date
         updateWattChart();
         updateWattHistory();
     } else if (tabName === 'comment') {
+        fillTodaysInputs(); // Ensure inputs for comment tab are up-to-date
         updateCommentHistory();
     }
 }
@@ -63,16 +67,23 @@ function switchMainTab(tabName) {
 function saveTemperature() {
     const morningInput = document.getElementById('tempMorningInput');
     const afternoonInput = document.getElementById('tempAfternoonInput');
-    const today = new Date().toISOString().split('T')[0];
+    const tempDateInput = document.getElementById('tempDateInput');
+    if (!morningInput || !afternoonInput || !tempDateInput) return;
 
     const morningTemp = morningInput.value !== '' ? parseFloat(morningInput.value) : null;
     const afternoonTemp = afternoonInput.value !== '' ? parseFloat(afternoonInput.value) : null;
+    const date = tempDateInput.value; // Get date from input
 
-    setTemperatureForDate(today, morningTemp, afternoonTemp);
+    if (!date) {
+        showNotification('Veuillez sélectionner une date', 'warning');
+        return;
+    }
+
+    setTemperatureForDate(date, morningTemp, afternoonTemp);
     
     updateTemperatureCharts();
     
-    showNotification('🌡️ Températures enregistrées !', 'success');
+    showNotification(`🌡️ Températures (${date}) enregistrées !`, 'success');
 }
 
 /**

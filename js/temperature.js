@@ -78,27 +78,64 @@ function initTemperatureCharts() {
     updateTemperatureCharts();
 }
 
+let currentTemperatureChartPeriod = 'month';
+
 /**
- * Mettre à jour les graphiques de température (mois en cours)
+ * Changer de période de graphique température
+ * @param {string} period - 'month' ou 'year'
  */
-function updateTemperatureCharts() {
+function switchTemperatureChart(period) {
+    currentTemperatureChartPeriod = period;
+    
+    // Mettre à jour les onglets actifs (dans le contexte du graphique température)
+    const tabsContainer = event.target.closest('.tabs');
+    if (tabsContainer) {
+        tabsContainer.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+    }
+    event.target.classList.add('active');
+    
+    updateTemperatureCharts(period);
+}
+
+/**
+ * Mettre à jour les graphiques de température
+ * @param {string} period - 'month' ou 'year'
+ */
+function updateTemperatureCharts(period = 'month') {
     if (!tempMorningChart || !tempAfternoonChart) return;
 
     const now = new Date();
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     let labels = [];
     let morningData = [];
     let afternoonData = [];
 
-    for (let i = 1; i <= daysInMonth; i++) {
-        const date = new Date(now.getFullYear(), now.getMonth(), i);
-        const dateStr = date.toISOString().split('T')[0];
-        labels.push(i.toString());
+    if (period === 'month') {
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
         
-        // These functions will be created in storage.js
-        const tempData = getTemperatureForDate(dateStr); 
-        morningData.push(tempData.morning);
-        afternoonData.push(tempData.afternoon);
+        for (let i = 1; i <= daysInMonth; i++) {
+            const date = new Date(now.getFullYear(), now.getMonth(), i);
+            const dateStr = date.toISOString().split('T')[0];
+            labels.push(i.toString());
+            
+            const tempData = getTemperatureForDate(dateStr); 
+            morningData.push(tempData.morning);
+            afternoonData.push(tempData.afternoon);
+        }
+    } else { // period === 'year'
+        const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+        
+        for (let i = 0; i < 12; i++) {
+            labels.push(months[i]);
+            
+            const monthStart = new Date(now.getFullYear(), i, 1);
+            const monthEnd = new Date(now.getFullYear(), i + 1, 0);
+            const monthData = getTemperatureDataForPeriod(monthStart, monthEnd); // Needs a new function in storage.js
+            
+            morningData.push(monthData.morningAvg); // Needs to calculate average
+            afternoonData.push(monthData.afternoonAvg); // Needs to calculate average
+        }
     }
 
     // Mettre à jour le graphique du matin

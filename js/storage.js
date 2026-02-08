@@ -109,6 +109,45 @@ function setTemperatureForDate(date, morning, afternoon) {
     saveData();
 }
 
+/**
+ * Obtenir les données de température (matin et après-midi) pour une période donnée.
+ * Calcule la moyenne pour chaque.
+ * @param {Date} startDate - Date de début
+ * @param {Date} endDate - Date de fin
+ * @returns {Object} Objet avec les moyennes morningAvg et afternoonAvg
+ */
+function getTemperatureDataForPeriod(startDate, endDate) {
+    let morningTotal = 0;
+    let afternoonTotal = 0;
+    let morningCount = 0;
+    let afternoonCount = 0;
+    
+    Object.keys(weatherData.temperature).forEach(dateStr => {
+        const date = new Date(dateStr);
+        // Normalize dates to start of day for accurate comparison
+        const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const normalizedStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        const normalizedEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+
+
+        if (normalizedDate >= normalizedStartDate && normalizedDate <= normalizedEndDate) {
+            const tempData = weatherData.temperature[dateStr];
+            if (tempData.morning !== null) {
+                morningTotal += tempData.morning;
+                morningCount++;
+            }
+            if (tempData.afternoon !== null) {
+                afternoonTotal += tempData.afternoon;
+                afternoonCount++;
+            }
+        }
+    });
+
+    const morningAvg = morningCount > 0 ? (morningTotal / morningCount) : null;
+    const afternoonAvg = afternoonCount > 0 ? (afternoonTotal / afternoonCount) : null;
+
+    return { morningAvg, afternoonAvg };
+}
 // --- Fonctions Commentaires ---
 
 function getCommentForDate(date) {

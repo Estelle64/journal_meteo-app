@@ -51,7 +51,7 @@ function switchMainTab(tabName) {
         updateHistory();
     } else if (tabName === 'temp') {
         fillTodaysInputs(); // Ensure inputs for temp tab are up-to-date
-        updateTemperatureCharts();
+        switchTemperatureChart('month'); // Initialize chart to month view
     } else if (tabName === 'watt') {
         fillTodaysInputs(); // Ensure inputs for watt tab are up-to-date
         updateWattChart();

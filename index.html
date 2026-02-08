@@ -9,7 +9,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/style.css" />
-    <link rel="icon" type="image/jpg" href="image/meteo.jpg" />
+    <link rel="icon" type="image/png" href="image/meteo.png" />
   </head>
   <body>
     <div class="container">
@@ -140,7 +140,10 @@
           <!-- Graphiques Température -->
           <div class="card">
             <div class="tabs">
-              <button class="tab active" onclick="switchTemperatureChart('month')">
+              <button
+                class="tab active"
+                onclick="switchTemperatureChart('month')"
+              >
                 Ce mois
               </button>
               <button class="tab" onclick="switchTemperatureChart('year')">
@@ -216,8 +219,12 @@
           <!-- Graphique Watts -->
           <div class="card">
             <div class="tabs">
-              <button class="tab active" onclick="switchWattChart('month')">Ce mois</button>
-              <button class="tab" onclick="switchWattChart('year')">Cette année</button>
+              <button class="tab active" onclick="switchWattChart('month')">
+                Ce mois
+              </button>
+              <button class="tab" onclick="switchWattChart('year')">
+                Cette année
+              </button>
             </div>
             <div class="chart-container">
               <canvas id="wattsChart"></canvas>
@@ -245,7 +252,11 @@
         <div class="card">
           <div class="input-section">
             <input type="date" id="commentDateInput" class="date-input" />
-            <textarea id="newCommentInput" placeholder="Ajouter un commentaire..." rows="4"></textarea>
+            <textarea
+              id="newCommentInput"
+              placeholder="Ajouter un commentaire..."
+              rows="4"
+            ></textarea>
             <button class="btn-primary" onclick="saveNewComment()">
               Enregistrer Commentaire
             </button>

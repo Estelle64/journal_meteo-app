@@ -1,47 +1,72 @@
 /**
  * storage.js
- * Gestion du stockage local des données météo
+ * Gestion du stockage des données météo.
+ * Utilise IndexedDB pour les données principales et localStorage pour les indicateurs simples.
  */
 
-const WEATHER_DATA_KEY = 'weather_data';
+// Clé pour l'ancien système de localStorage, utilisée pour la migration
+const LEGACY_STORAGE_KEY = 'weather_data';
+
+// --- Données en mémoire ---
 let weatherData = {
     rainfall: {},
     temperature: {},
     comments: {},
-    watts: {} // Nouvelle clé pour les watts
+    watts: {}
 };
 
 /**
- * Charger les données depuis localStorage
+ * Charge les données depuis IndexedDB.
+ * Gère une migration unique depuis localStorage si nécessaire.
  */
-function loadData() {
-    const stored = localStorage.getItem(WEATHER_DATA_KEY);
-    if (stored) {
-        try {
-            const data = JSON.parse(stored);
-            // Fusionner pour assurer la compatibilité ascendante
-            weatherData = {
-                rainfall: data.rainfall || {},
-                temperature: data.temperature || {},
-                comments: data.comments || {}, // Charger les commentaires
-                watts: data.watts || {} // Charger les watts
+async function loadData() {
+    try {
+        // Essayer de charger depuis IndexedDB
+        const idbData = await getWeatherDataFromDB();
+        
+        // Vérifier si des données existent dans l'ancien localStorage pour la migration
+        const legacyDataRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+
+        if (legacyDataRaw) {
+            console.log('Données héritées trouvées dans localStorage. Migration vers IndexedDB...');
+            const legacyData = JSON.parse(legacyDataRaw);
+            
+            // Fusionner les données (priorité aux données de localStorage en cas de conflit rare)
+            const mergedData = {
+                rainfall: { ...idbData.rainfall, ...legacyData.rainfall },
+                temperature: { ...idbData.temperature, ...legacyData.temperature },
+                comments: { ...idbData.comments, ...legacyData.comments },
+                watts: { ...idbData.watts, ...legacyData.watts }
             };
-        } catch (error) {
-            console.error('Erreur lors du chargement des données:', error);
-            weatherData = { rainfall: {}, temperature: {}, comments: {}, watts: {} };
+            
+            weatherData = mergedData;
+            await setWeatherDataInDB(weatherData); // Sauvegarder les données fusionnées dans IndexedDB
+            
+            // Nettoyer l'ancien localStorage
+            localStorage.removeItem(LEGACY_STORAGE_KEY);
+            console.log('Migration terminée et ancien localStorage nettoyé.');
+        } else {
+            // Si pas de migration, utiliser simplement les données d'IndexedDB
+            weatherData = idbData;
         }
+    } catch (error) {
+        console.error('Erreur lors du chargement des données depuis IndexedDB:', error);
+        // En cas d'erreur, on part d'un état vide pour éviter de planter l'app
+        weatherData = { rainfall: {}, temperature: {}, comments: {}, watts: {} };
     }
 }
 
+
 /**
- * Sauvegarder les données dans localStorage
+ * Sauvegarde les données en mémoire dans IndexedDB.
  */
-function saveData() {
+async function saveData() {
     try {
-        localStorage.setItem(WEATHER_DATA_KEY, JSON.stringify(weatherData));
+        await setWeatherDataInDB(weatherData);
+        // Conserver la date de sauvegarde dans localStorage pour un accès simple et rapide
         localStorage.setItem('last_backup_date', new Date().toISOString());
     } catch (error) {
-        console.error('Erreur lors de la sauvegarde:', error);
+        console.error('Erreur lors de la sauvegarde dans IndexedDB:', error);
         showNotification('❌ Erreur lors de la sauvegarde', 'warning');
     }
 }
@@ -92,7 +117,7 @@ function getCommentForDate(date) {
 
 function setCommentForDate(date, comment) {
     if (comment.trim() === '') {
-        delete weatherData.comments[date]; // Supprimer si le commentaire est vide
+        delete weatherData.comments[date];
     } else {
         weatherData.comments[date] = comment;
     }
@@ -131,14 +156,15 @@ function getTotalWattForPeriod(startDate, endDate) {
     return total;
 }
 
-// --- Fonctions communes ---
+// --- Fonctions communes d'import/export ---
 
 /**
  * Exporter toutes les données en JSON
  */
-function exportData() {
+async function exportData() {
     try {
-        const dataStr = JSON.stringify(weatherData, null, 2);
+        const dataToExport = await getWeatherDataFromDB(); // Obtenir les données fraîches
+        const dataStr = JSON.stringify(dataToExport, null, 2);
         const dataBlob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(dataBlob);
         const link = document.createElement('a');
@@ -159,19 +185,19 @@ function exportData() {
 /**
  * Importer des données depuis un fichier JSON
  */
-function importData(event) {
+async function importData(event) {
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         try {
             const imported = JSON.parse(e.target.result);
             if (typeof imported !== 'object' || imported === null) {
                 throw new Error('Format invalide');
             }
             
-            // Fusionner les données importées
+            // Fusionner les données importées avec les données existantes en mémoire
             if (imported.rainfall) {
                 weatherData.rainfall = { ...weatherData.rainfall, ...imported.rainfall };
             }
@@ -181,19 +207,21 @@ function importData(event) {
             if (imported.comments) {
                 weatherData.comments = { ...weatherData.comments, ...imported.comments };
             }
-            if (imported.watts) { // Fusionner les watts
+            if (imported.watts) {
                 weatherData.watts = { ...weatherData.watts, ...imported.watts };
             }
 
-            saveData();
+            await saveData(); // Sauvegarder les données fusionnées dans IndexedDB
             
             // Rafraîchir toute l'interface
             updateStats();
             updateHistory();
             updateChart();
             updateTemperatureCharts();
-            updateWattCharts(); // Nouvelle fonction à créer
-            fillTodaysInputs(); // Mettre à jour les inputs après import
+            updateWattChart();
+            updateWattHistory();
+            updateCommentHistory();
+            fillTodaysInputs();
 
             showNotification('✓ Données importées avec succès !', 'success');
         } catch (error) {
@@ -207,7 +235,7 @@ function importData(event) {
     };
     
     reader.readAsText(file);
-    event.target.value = ''; // Reset input
+    event.target.value = '';
 }
 
 /**

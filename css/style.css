@@ -521,10 +521,24 @@ input[type="file"] {
 }
 
 .tab-content {
-  display: none;
+  opacity: 0;
+  visibility: hidden;
+  max-height: 0; /* Initially collapse content */
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  overflow: hidden;
+  transition: opacity 0.5s ease-in-out, max-height 0.5s ease-in-out, padding 0.5s ease-in-out, margin 0.5s ease-in-out, visibility 0.5s step-end;
 }
 
 .tab-content.active {
-  display: block;
-  animation: fadeInUp 0.5s ease;
+  opacity: 1;
+  visibility: visible;
+  max-height: 2000px; /* Large enough to contain any tab content */
+  padding-top: 20px; /* Restore body padding or adjust as needed */
+  padding-bottom: 20px; /* Restore body padding or adjust as needed */
+  margin-bottom: 30px; /* Restore default margin for container children */
+  overflow: visible;
+  transition: opacity 0.5s ease-in-out, max-height 0.5s ease-in-out, padding 0.5s ease-in-out, margin 0.5s ease-in-out, visibility 0.5s step-start;
+  animation: fadeInUp 0.5s ease; /* Keep the existing animation */
 }
